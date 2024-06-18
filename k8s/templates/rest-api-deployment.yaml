@@ -1,9 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.rest.name }}
+  labels:
+    app: {{ .Values.rest.name }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.rest.name }}
+  ports:
+    - name: tcp
+      port: {{ .Values.rest.port }}
+      protocol: TCP
+      targetPort: {{ .Values.rest.containerPort }}
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: {{ .Values.rest.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.rest.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Values.rest.name }}
@@ -16,6 +32,11 @@ spec:
       containers:
       - name: {{ .Values.rest.name }}
         image: {{ .Values.rest.image }}
+        env:
+        - name: database.user
+          value: root
+        - name: database.host 
+          value: {{ .Values.mysql.name }}
         imagePullPolicy: Always
         ports:
         - containerPort: {{ .Values.rest.containerPort }}

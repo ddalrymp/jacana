@@ -1,13 +1,18 @@
 rest:
-  name: helidon-quickstart-mp
+  name: jacana-rest-api 
   replicaCount: 1
-  image: localhost:5000/helidon-quickstart-mp:latest
+  image: localhost:5000/jacana-rest-api:latest
   containerPort: 8080
   port: 8080
 
+mysql:
+  name: mysql
+  image: mysql:8.4
+  port: 3306
+
 logging:
   visualization:
-    enabled: false
+    enabled: true
 
 elasticsearch:
   name: elasticsearch

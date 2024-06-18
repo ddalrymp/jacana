@@ -1,4 +1,15 @@
 {{ if .Values.logging.visualization.enabled }}
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+spec:
+  selector:
+    app: {{ .Values.elasticsearch.name }}
+  ports:
+  - port: {{ .Values.elasticsearch.containerPort }}
+    targetPort: es-http
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:

@@ -1,4 +1,18 @@
 {{ if .Values.logging.visualization.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.kibana.name }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.kibana.name }}
+  ports:
+  - name: tcp
+    port: {{ .Values.kibana.containerPort }}
+    protocol: TCP
+    targetPort: {{ .Values.kibana.containerPort }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

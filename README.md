@@ -38,6 +38,11 @@ docker --version
 kubectl version
 ```
 
+**Optional**, Install jq (it helps a lot and testing commands use it below)
+```
+brew install jq
+```
+
 # Start Up
 
 Start docker desktop
@@ -67,72 +72,119 @@ minikube tunnel
 ```
 To terminate either of the two commands above type Ctrl+C in the terminal.
 
+# Deploy the project
 
-
-
-
-Docker Desktop 
-Kubernetes (minikube is used for this project)
-Java 21+
-Maven (?.?)
-
-Start up Docker Desktop
-
-Start up minikube
-```
-minikube start --insecure-registry "10.0.0.0/24"
-```
-
-Enable the Docker Registry within minikube (one time operation). The command is idempotent so it is ok to re-run.
-```
-minikube addons enable registry
-```
-
-Open a port to the minikube Docker Registry. The command uses localhost:5200, because localhost:5000 is in use by another process:
-```
-docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5200,reuseaddr,fork TCP:$(minikube ip):5000"
-```
-This command will remain running in the terminal where it is started. The last line of output should start with 'OK:...'. To terminate the command type 'Ctrl+c'
-
-Start the tunnel to minikube so we can access `LoadBalancer` services running in minikube. Only the `LoadBalancer` services are given an External IP in minikube.
-```
-minikube tunnel
-```
-You will be prompted for your user's password to access privileged ports 80 and 443
-
-Grant fluentd permission to logging resources
-```
-kubectl create -f fluentd-rbac.yaml
-```
-
-# Quickstart
-
-Build the Docker Image
-```
-docker build -t helidon-quickstart-mp rest-api/.
-```
-
-Push the Docker Image to local image repository
-(Remember to forward localhost:5200 to minikube VM on port 5000 - See above Environment Setup for the command)
-```
-docker tag helidon-quickstart-mp localhost:5200/helidon-quickstart-mp
-docker push localhost:5200/helidon-quickstart-mp
-```
-
-Install the app using Helm
+Create the namespace
 ```
 kubectl create namespace jacana
+```
+You can verify with
+```
+kubectl get namespace
+```
+Build the REST API Docker Image (execute from project root). Should take under a minute to build.
+```
+docker build -t jacana-rest-api rest-api/.
+```
+Tag and push the REST API Docker Image to the minikube Docker Registry
+```
+docker tag jacana-rest-api localhost:5200/jacana-rest-api
+docker push localhost:5200/jacana-rest-api
+```
+Install using Helm
+```
 helm install jacana-release k8s/. -n jacana
 ```
+**Note** Kibana will enter the Running state, but will not be accessible for at least 1-2 minutes while it starts up internally.
 
-Check the app
+In a separate terminal you can **optionally** monitor the progress of the jacana namespace. There should be four pods (MySQL, Elasticsearch, Kibana, and the REST Application). Four services, two will be a LoadBalancer to access the REST API and Kibana.
 ```
-kubectl get pod -n jacana 
+watch -n 10 'kubectl get all -n jacana'
 ```
-You should see all pods in the 'Running' state.
+In another terminal you can **optionally** monitor the progress of the kube-system namespace. The log collection tool, fluentd, is deployed to kube-system - for reasons that aren’t perfectly clear I couldn’t get fluentd to run in the jacana namespace. You want to be sure there is a fluentd pod, and a DaemonSet (daemonset.apps/fluentd)
+```
+watch -n 10 'kubectl get all -n kube-system'
+```
 
-Test the REST API
-( Remember to start the minikube tunnel - See above Environment Setup for the command )
+# Testing
+
+Perform a quick test to see if the REST API is accessible. This should return an empty array.
+```
+curl -s -X GET http://localhost:8080/customers | jq
+```
+Let's insert a simple customer record
+```
+curl -s -X POST -H "Content-Type: application/json" -d '{"email":"foo@example.com"}' http://localhost:8080/customers | jq
+```
+List the customers again and see the newly added customer.
+```
+curl -s -X GET http://localhost:8080/customers | jq
+```
+
+## Observability
+
+### Watch the logs in fluentd
+
+Open a terminal and run this command:
+```
+kubectl logs -f -n kube-system $(kubectl get pod -n kube-system --no-headers -o custom-columns=":metadata.name" | grep "fluentd")
+```
+Note that fluentd is only configured for the deployed namespace, jacana, and the rest-api pod.
+
+### Watch the logs in kibana
+
+Access Kibana in your browser: http://localhost:5601
+
+* On a first time access of Kibana:
+* Click ‘Use my own data’ (the first screen on a first load - may not show either)
+* Click the top-left icon (three horizontal bars)
+* Select Discover under Kibana
+* Click ‘Index Patterns’
+* Click ‘Create index pattern’ button
+* There should be an existing index starting with the word ‘logstash’. In the ‘Index pattern name’ type ‘logstash’, then click ‘Next step’
+* The ‘Time field’ to select is ‘@timestamp’.
+* Click ‘Create index pattern’
+* Click the top-left icon (three horizontal bars)
+* Click Discover under Kibana
+
+You should now see log lines, bar charts, etc.
+
+**NOTE** Kibana and Elastic can be enabled/disabled in `k8s/values.yaml` by editing the property:
+```
+logging:
+  visualization:
+    enabled: false
+```
+This ability was added when it was noticed that running all four services together sometimes ran into performance problems for minikube. Plus it is sometimes nice to run a little 'leaner' if only testing the REST API.
+
+If you do modify the values in `k8s/values.yaml` remember to upgrade helm:
+```
+helm upgrade jacana-release k8s/. -n jacana
+```
+And, again, Kibana pod may say 'Running', but it may not be accessible for a few minutes.
+
+### Metrics
+
+By default Helidon exposes a `health` endpoint and a `metrics` endpoint that is compatible with Prometheus (and json).
+
+Get the health of the service
+```
+curl -s -X GET http://localhost:8080/health | jq
+```
+Should say the status is UP
+
+Get the metrics of the service in json
+```
+curl -s -X GET http://localhost:8080/metrics -H 'Accept: application/json' | jq
+```
+
+Get the metrics of the service for Prometheus
+```
+curl -s -X GET http://localhost:8080/metrics 
+```
+This example project does not have a Prometheus deployment scraping metrics. 
+
+The jacana rest-api exposes counts and times for the `insert`, `update`, and `delete` REST API calls. As well as counts of any errors invoking those endpoints.
 
 # Updating the code
 
@@ -144,18 +196,18 @@ mvn package
 
 Build Docker image
 ```
-docker build -t helidon-quickstart-mp rest-api/.
+docker build -t jacana-rest-api rest-api/.
 ```
 
 Tag and Push the Docker image
 ```
-docker tag helidon-quickstart-mp localhost:5200/helidon-quickstart-mp
-docker push localhost:5200/helidon-quickstart-mp
+docker tag jacana-rest-api localhost:5200/jacana-rest-api
+docker push localhost:5200/jacana-rest-api
 ```
 
 Delete the helidon-quickstart-mp pod so that it is recreated with the actual latest image
 ```
-kubectl delete pod $(kubectl get pod -n jacana --no-headers -o custom-columns=":metadata.name" | grep "helidon-quickstart-mp") -n jacana
+kubectl delete pod $(kubectl get pod -n jacana --no-headers -o custom-columns=":metadata.name" | grep "jacana-rest-api") -n jacana
 ```
 List the pods to see when they are running again
 ```
@@ -164,30 +216,8 @@ kubectl get pod -n jacana
 
 Test the REST API endpoint
 ```
-curl -X GET http://localhost:8080/simple-greet
+curl -X GET http://localhost:8080/customers
 ```
 
 
-
-Remember to bump the versions in Chart.yaml
-```
-helm uninstall jacana-release -n jacana
-helm install jacana-release k8s/. -n jacana
-# helm upgrade jacana-release k8s/. -n jacana
-```
-
-Get metrics, json formatted
-```
-curl -H 'Accept: application/json' -X GET http://localhost:8080/metrics
-```
-
-Get metrics, Prometheus formatted
-```
-curl -s -X GET http://localhost:8080/metrics
-```
-
-Get health
-```
-curl -s -X GET http://localhost:8080/health
-```
 
