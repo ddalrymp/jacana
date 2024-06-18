@@ -6,11 +6,9 @@ This project demonstrates a small application to highlight a collection of techn
 
 Machine: MacOS (M1 processor)
 
-Install Docker Desktop.
-https://docs.docker.com/desktop/install/mac-install/
+[Install Docker Desktop.](https://docs.docker.com/desktop/install/mac-install/)
 
-Install minikube (for MacOS M1 processor)
-https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Fx86-64%2Fstable%2Fbinary+download
+[Install minikube (for MacOS M1 processor)](https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Fx86-64%2Fstable%2Fbinary+download)
 ```
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-arm64
 sudo install minikube-darwin-arm64 /usr/local/bin/minikube

@@ -1,0 +1,20 @@
+rest:
+  name: helidon-quickstart-mp
+  replicaCount: 1
+  image: localhost:5000/helidon-quickstart-mp:latest
+  containerPort: 8080
+  port: 8080
+
+logging:
+  visualization:
+    enabled: false
+
+elasticsearch:
+  name: elasticsearch
+  image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
+  containerPort: 9200 
+
+kibana:
+  name: kibana
+  image: docker.elastic.co/kibana/kibana:7.9.3
+  containerPort: 5601 

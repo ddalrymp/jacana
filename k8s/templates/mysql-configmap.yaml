@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS jacana;
+    USE jacana;
+    CREATE TABLE Customers (
+      guid VARCHAR(40) NOT NULL,
+      namePrefix VARCHAR(256),
+      nameSuffix VARCHAR(256),
+      nameSurname VARCHAR(256),
+      nameMiddle VARCHAR(256),
+      nameFamily VARCHAR(256),
+      email VARCHAR(320) NOT NULL,
+      phone VARCHAR(100)
+    );
+    CREATE UNIQUE INDEX CustomersGuid
+      ON Customers(guid);
+    CREATE UNIQUE INDEX CustomersEmail
+      ON Customers(email); 

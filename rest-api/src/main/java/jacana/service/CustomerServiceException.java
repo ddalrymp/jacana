@@ -1,10 +1,7 @@
-package jacana.dao;
+package jacana.service;
 
 public class CustomerServiceException extends Exception {
     public CustomerServiceException(String errorMessage) {
         super(errorMessage);
-    }
-    public CustomerServiceException(String errorMessage, Throwable err) {
-        super(errorMessage, err);
     }
 }

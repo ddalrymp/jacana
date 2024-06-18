@@ -1,0 +1,27 @@
+{{ if .Values.logging.visualization.enabled }}
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.elasticsearch.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.elasticsearch.name }}
+        version: v1
+    spec:
+      containers:
+      - name: {{ .Values.elasticsearch.name }}
+        image: {{ .Values.elasticsearch.image }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.elasticsearch.containerPort }}
+          name: es-http
+        env:
+        - name: discovery.type
+          value: single-node
+{{ end }}
