@@ -38,6 +38,38 @@ docker --version
 kubectl version
 ```
 
+# Start Up
+
+Start docker desktop
+
+[Start minikube](https://minikube.sigs.k8s.io/docs/handbook/registry/ ):
+```
+minikube start --insecure-registry "10.0.0.0/24"
+```
+**or** you can start with a clean minikube
+```
+minikube delete && minikube start --insecure-registry "10.0.0.0/24"
+```
+Configure minikube for its own registry (one time operation, but it is idempotent)
+```
+minikube addons enable registry
+```
+
+**Open two terminals to keep the following two commands running.**
+
+Trick docker into some port forwarding so that my localhost:5200 (because my OS has something using port 5000).
+```
+docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5200,reuseaddr,fork TCP:$(minikube ip):5000"
+```
+Create a tunnel into minikube to access services in the cluster
+```
+minikube tunnel
+```
+To terminate either of the two commands above type Ctrl+C in the terminal.
+
+
+
+
 
 Docker Desktop 
 Kubernetes (minikube is used for this project)
