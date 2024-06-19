@@ -290,7 +290,7 @@ curl -s -X DELETE -H "Content-Type: application/json" http://localhost:8080/cust
 
 # Updating the code
 
-Build the code. This will run the test cases which are skipped when building the Docker image, so this is an important step for validation.
+If you want to make edits to the rest-api code, then this will run the test cases which are skipped when building the Docker image, so this is an important step for validation.
 ```
 cd rest-api
 mvn package
