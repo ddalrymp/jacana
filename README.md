@@ -212,6 +212,7 @@ curl -s -X GET 'http://localhost:8080/customers?email=foo@example.com' | jq
 ```
 
 Get the customer by guid
+
 **NOTE**: Use the guid from the response in the create command.
 ```
 curl -s -X GET 'http://localhost:8080/customers?guid=d97318b6-074b-4bb9-bdfa-ecab137876d1' | jq
@@ -243,12 +244,14 @@ curl -s -X POST -H "Content-Type: application/json" -d '{"email":"car@example.co
 ```
 
 Update the email address of the second customer
+
 **NOTE**: Use the guid from the response in the second create command.
 ```
 curl -s -X PUT -H "Content-Type: application/json" -d '{"email":"newcar@example.com"}' http://localhost:8080/customers/6761f4ee-bb3e-4a26-83de-90f194866210 | jq
 ```
 
 Update the email address of the second customer to match the first customer. This will return a 400 error.
+
 **NOTE**: Use the guid from the response in the second create command.
 ```
 curl -s -X PUT -H "Content-Type: application/json" -d '{"email":"bar@example.com"}' http://localhost:8080/customers/6761f4ee-bb3e-4a26-83de-90f194866210 | jq
@@ -267,13 +270,14 @@ curl -s -X POST -H "Content-Type: application/json" -d '{"email":"foo@example.co
 ```
 
 Deleting the customer results in a 200 OK and a body containing the details of the customer that was deleted.
+
 **NOTE**: Use the guid returned from creating the customer.
-```
 ```
 curl -s -X DELETE -H "Content-Type: application/json" http://localhost:8080/customers/1bf94f25-5c18-4572-bb68-556db52918e1 | jq
 ```
 
 Deleting the customer again results in a 404 as the customer is not found.
+
 **NOTE**: Use the guid returned from creating the customer.
 ```
 curl -s -X DELETE -H "Content-Type: application/json" http://localhost:8080/customers/1bf94f25-5c18-4572-bb68-556db52918e1 | jq
