@@ -62,11 +62,11 @@ minikube addons enable registry
 
 **Open two terminals to keep the following two commands running.**
 
-Trick docker into some port forwarding so that my localhost:5200 (because my OS has something using port 5000).
+Trick docker into some port forwarding so that my localhost:5200 can be used (using 5200 because my OS has something using port 5000).
 ```
 docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5200,reuseaddr,fork TCP:$(minikube ip):5000"
 ```
-Create a tunnel into minikube to access services in the cluster
+Create a tunnel into minikube to access services in the cluster. This makes any `LoadBalancer` port in kubernetes accessible on `localhost`.
 ```
 minikube tunnel
 ```
@@ -140,8 +140,9 @@ Note that fluentd is only configured for the deployed namespace, jacana, and the
 
 Access Kibana in your browser: http://localhost:5601
 
-* On a first time access of Kibana:
-* Click ‘Use my own data’ (the first screen on a first load - may not show either)
+On a first time access of Kibana:
+
+* Click ‘Use my own data’ (Sometimes kibana asks this and sometimes not)
 * Click the top-left icon (three horizontal bars)
 * Select Discover under Kibana
 * Click ‘Index Patterns’
@@ -196,6 +197,7 @@ The jacana rest-api exposes counts and times for the `insert`, `update`, and `de
 ## Insert
 
 Insert a customer. The response code is 200 OK and the body is the customer that was created which should be the same as the POST body EXCEPT with a unique, guid, field included.
+
 **NOTE**: Null fields are not returned. Working on how to fix things to return null fields.
 ```
 curl -s -X POST -H "Content-Type: application/json" -d '{"email":"foo@example.com"}' http://localhost:8080/customers | jq
