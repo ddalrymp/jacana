@@ -262,7 +262,7 @@ Update a non-existent customer will return a 404 not found.
 curl -s -X PUT -H "Content-Type: application/json" -d '{"email":"bar@example.com"}' http://localhost:8080/customers/foobar | jq
 ```
 
-## DELETE
+## Delete
 
 Create a customer
 ```
