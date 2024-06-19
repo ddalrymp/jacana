@@ -49,11 +49,11 @@ Start docker desktop
 
 [Start minikube](https://minikube.sigs.k8s.io/docs/handbook/registry/ ):
 ```
-minikube start --insecure-registry "10.0.0.0/24"
+minikube start
 ```
 **or** you can start with a clean minikube
 ```
-minikube delete && minikube start --insecure-registry "10.0.0.0/24"
+minikube delete && minikube start
 ```
 Configure minikube for its own registry (one time operation, but it is idempotent)
 ```
